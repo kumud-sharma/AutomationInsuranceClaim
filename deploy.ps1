@@ -96,6 +96,7 @@ Import-Module AzureAD
 Install-Module -Name MSOnline
 Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
 Set-PSRepository -Name "PSGallery" -Installationpolicy Trusted
+Update-Module -Name Az.Search
 
 $ErrorActionPreference = "Stop"
 #Install-Module AzTable -Force
