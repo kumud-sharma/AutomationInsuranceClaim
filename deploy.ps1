@@ -1,53 +1,36 @@
-##################################################################
-#                                                                #
-#   Setup Script                                                 #
-#                                                                #
-#   Spins up azure resources for RPA solution using MS Services. #
-##################################################################
-
-
+CD C:\LabFiles
+$credsfilepath = ".\AzureCreds.txt"
+$creds = Get-Content $credsfilepath | Out-String | ConvertFrom-StringData
+$AzureUserName = "$($creds.AzureUserName)"
+$AzurePassword = "$($creds.AzurePassword)"
+$DeploymentID = "$($creds.DeploymentID)"
+$AzureSubscriptionID = "$($creds.AzureSubscriptionID)"
+$passwd = ConvertTo-SecureString $AzurePassword -AsPlainText -Force
+$cred = new-object -typename System.Management.Automation.PSCredential -argumentlist $AzureUserName, $passwd
+$subscriptionId = $AzureSubscriptionID 
+Connect-AzAccount -Credential $cred | Out-Null
+$resourceGroupName= "Insurance"
+$loc= Get-AzResourceGroup -Name $resourceGroupName
+$location= $loc.location
+#Write-Host $location
+$uniqueName= "claim"+$DeploymentID
+CD C:\Users\Public\Desktop\deploy
 #----------------------------------------------------------------#
 #   Parameters                                                   #
 #----------------------------------------------------------------#
-param (
-    [Parameter(Mandatory=$true)]
-    [string]$uniqueName = "default", 
-    [string]$subscriptionId = "default",
-    [string]$location = "default",
-	[string]$resourceGroupName = "default"
-)
+#param (
+ #   [Parameter(Mandatory=$true)]
+  #  [string]$uniqueName = "default", 
+   # [string]$subscriptionId = "default",
+    #[string]$location = "default",
+	#[string]$resourceGroupName = "default"
+#)
+
+$formsTraining = 'true'
+$customVisionTraining = 'true'
+$luisTraining = 'true'
 $cognitiveSearch = 'true'
 $deployWebUi = 'true'
-
-if($uniqueName -eq "default")
-{
-    Write-Error "Please specify a unique name."
-    break;
-}
-
-if($uniqueName.Length -gt 17)
-{
-    Write-Error "The unique name is too long. Please specify a name with less than 17 characters."
-}
-
-if($uniqueName -Match "-")
-{
-	Write-Error "The unique name should not contain special characters"
-}
-
-if($location -eq "default")
-{
-	while ($TRUE) {
-		try {
-			$location = Read-Host -Prompt "Input Location(westus, eastus, centralus, southcentralus): "
-			break  
-		}
-		catch {
-				Write-Error "Please specify a resource group name."
-		}
-	}
-}
-
 Function Pause ($Message = "Press any key to continue...") {
    # Check if running in PowerShell ISE
    If ($psISE) {
@@ -56,8 +39,7 @@ Function Pause ($Message = "Press any key to continue...") {
       $Shell = New-Object -ComObject "WScript.Shell"
       Return
    }
- 
-   $Ignore =
+ $Ignore =
       16,  # Shift (left or right)
       17,  # Ctrl (left or right)
       18,  # Alt (left or right)
@@ -96,32 +78,32 @@ $uniqueName = $uniqueName.ToLower();
 
 # prefixes
 $prefix = $uniqueName
-
-if ( $resourceGroupName -eq 'default' ) {
-	$resourceGroupName = $prefix
-}
-
-#$ScriptRoot = "C:\Projects\Repos\msrpa\deploy\scripts"
+$ScriptRoot = "C:\Users\Public\Desktop\deploy"
 $outArray = New-Object System.Collections.ArrayList($null)
 
 if ($ScriptRoot -eq "" -or $null -eq $ScriptRoot ) {
 	$ScriptRoot = (Get-Location).path
 }
-
 $outArray.Add("v_prefix=$prefix")
 $outArray.Add("v_resourceGroupName=$resourceGroupName")
 $outArray.Add("v_location=$location")
 
-#----------------------------------------------------------------#
-#   Setup - Azure Subscription Login							 #
-#----------------------------------------------------------------#
+
+Install-Module Az.Search -Force
+Install-Module -Name Az.BotService -Force
+Install-Module AzureAD -Force
+Import-Module AzureAD
+Install-Module -Name MSOnline
+Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+Set-PSRepository -Name "PSGallery" -Installationpolicy Trusted
+
 $ErrorActionPreference = "Stop"
 #Install-Module AzTable -Force
 
 # Sign In
 Write-Host Logging in... -ForegroundColor Green
-Connect-AzAccount
-az login
+#Connect-AzAccount
+#az login
 
 if($subscriptionId -eq "default"){
 	# Set Subscription Id
@@ -139,23 +121,6 @@ if($subscriptionId -eq "default"){
 $outArray.Add("v_subscriptionId=$subscriptionId")
 $context = Get-AzSubscription -SubscriptionId $subscriptionId
 Set-AzContext @context
-
-Enable-AzContextAutosave -Scope CurrentUser
-$index = 0
-$numbers = "123456789"
-foreach ($char in $subscriptionId.ToCharArray()) {
-    if ($numbers.Contains($char)) {
-        break;
-    }
-    $index++
-}
-$id = $subscriptionId.Substring($index, $index + 5)
-
-
-Install-Module Az.Search -Force
-Install-Module -Name Az.BotService -Force
-Install-Module AzureAD -Force
-Import-Module AzureAD
 #----------------------------------------------------------------#
 #   Step 1 - Register Resource Providers and Resource Group		 #
 #----------------------------------------------------------------#
@@ -190,7 +155,6 @@ catch {
 			-Force
 	}
 
-#----------------------------------------------------------------#
 #   Step 2 - Storage Account & Containers						 #
 #----------------------------------------------------------------#
 # Create Storage Account
@@ -239,7 +203,7 @@ $CorsRules = (@{
 		AllowedHeaders  = @("*");
 		AllowedOrigins  = @("*");
 		MaxAgeInSeconds = 0;
-		AllowedMethods  = @("Delete", "Get", "Head", "Merge", "Put", "Post", "Options", "Patch");
+		AllowedMethods  =  @("Delete", "Get", "Head", "Merge", "Put", "Post", "Options", "Patch");
 		ExposedHeaders  = @("*");
 	})
 Set-AzStorageCORSRule -ServiceType Blob -CorsRules $CorsRules -Context $storageContext
@@ -374,7 +338,6 @@ $outArray.Add("v_customVisionPredictSubscriptionKey=$customVisionPredictSubscrip
 #----------------------------------------------------------------#
 #   Step 4 - App Service Plan 									 #
 #----------------------------------------------------------------#
-
 # Create App Service Plan
 Write-Host Creating app service plan... -ForegroundColor Green
 # app service plan
@@ -391,8 +354,6 @@ if ($currentApsName.Name -eq $null ) {
         -ResourceGroupName $resourceGroupName `
         -Tier Basic
 }
-
-#----------------------------------------------------------------#
 #   Step 5 - Azure Search Service								 #
 #----------------------------------------------------------------#
 # Create Cognitive Search Service
@@ -409,12 +370,12 @@ if ($null -eq $currentAzSearchName.Name) {
 			-Location $location
 }
 
+
 $cognitiveSearchKey = (Get-AzSearchAdminKeyPair -ResourceGroupName $resourceGroupName -ServiceName $cognitiveSearchName).Primary
 $cognitiveSearchEndPoint = 'https://' + $cognitiveSearchName + '.search.windows.net'
 $outArray.Add("v_cognitiveSearchKey=$cognitiveSearchKey")
 $outArray.Add("v_cognitiveSearchEndPoint=$cognitiveSearchEndPoint")
 
-#----------------------------------------------------------------#
 #   Step 6 - CosmosDb account, database and container			 #
 #----------------------------------------------------------------#
 
@@ -452,7 +413,7 @@ New-AzResource `
 	-Force
 
 Start-Sleep -s 30
-		
+
 # Create Cosmos Database
 Write-Host Creating CosmosDB Database... -ForegroundColor Green
 $cosmosDatabaseProperties = @{
@@ -474,7 +435,6 @@ if ($null -eq $currentCosmosDb.Name) {
         -PropertyObject ($cosmosDatabaseProperties) `
         -Force
 }
-
 # Create Cosmos Containers
 Write-Host Creating CosmosDB Containers... -ForegroundColor Green
 $cosmosContainerNames = @($cosmosClaimsContainer)
@@ -498,7 +458,6 @@ foreach ($containerName in $cosmosContainerNames) {
 				-PropertyObject $cosmosContainerProperties `
 				-Force 
 }
-
 $cosmosEndPoint = (Get-AzResource -ResourceType "Microsoft.DocumentDb/databaseAccounts" `
      -ApiVersion "2015-04-08" -ResourceGroupName $resourceGroupName `
      -Name $cosmosAccountName | Select-Object Properties).Properties.documentEndPoint
@@ -511,8 +470,7 @@ $cosmosConnectionString = (Invoke-AzResourceAction -Action listConnectionStrings
 $outArray.Add("v_cosmosEndPoint=$cosmosEndPoint")
 $outArray.Add("v_cosmosPrimaryKey=$cosmosPrimaryKey")
 $outArray.Add("v_cosmosConnectionString=$cosmosConnectionString")
-
-
+#------#
 #----------------------------------------------------------------#
 #   Step 7 - Find all forms that needs training and upload		 #
 #----------------------------------------------------------------#
@@ -527,6 +485,7 @@ $testingFormContainers = New-Object System.Collections.ArrayList($null)
 $testingFormContainers.Clear()
 
 $folders = Get-ChildItem $trainingFilePath
+cd $trainingFilePath
 $formContainerName = "train"
 Write-Host Create Container $formContainerName	 -ForegroundColor Green		
 try {
@@ -551,10 +510,30 @@ foreach ($folder in $folders) {
 			-Container $formContainerName `
 			-Blob $blobFileName `
 			-Context $storageContext `
+
+$storageContext = $storageAccount.Context
+			
+		
+	}
+}
+
+foreach ($folder in $folders) {
+	$trainingFormContainers.Add($formContainerName)
+	$files = Get-ChildItem $folder
+	foreach($file in $files){
+		$filePath = $trainingFilePath + $folder.Name + '\' + $file.Name
+		$blobFileName = $folder.Name + '\' + $file.Name
+		Write-Host Upload File $filePath -ForegroundColor Green
+		Set-AzStorageBlobContent `
+			-File $filePath `
+			-Container $formContainerName `
+			-Blob $blobFileName `
+			-Context $storageContext `
 			-Force
 		
 	}
 }
+cd $testFilePath
 $folders = Get-ChildItem $testFilePath
 $formContainerName = "test"
 Write-Host Create Container $formContainerName	 -ForegroundColor Green	
@@ -586,6 +565,7 @@ foreach ($folder in $folders) {
 #----------------------------------------------------------------#
 #   Step 8 - Train LUIS Models						 			 #
 #----------------------------------------------------------------#
+
 # Train LUIS
 Write-Host Luis Models... -ForegroundColor Green
 $luisAppImportUrl = $luisAuthoringEndpoint + "luis/authoring/v3.0-preview/apps/import"
@@ -650,7 +630,9 @@ foreach($file in $files){
 	}
 }
 
-#----------------------------------------------------------------#
+
+CD C:\Users\Public\Desktop\deploy
+
 #   Step 9 - Create API Connection and Deploy Logic app		 #
 #----------------------------------------------------------------#
 $azureBlobApiConnectionName = "azureblob"
@@ -737,8 +719,6 @@ New-AzResourceGroupDeployment `
 		-Name $azuredocumentDbApiConnectionName `
 		-TemplateFile $azuredocumentDbTemplateFilePath `
 		-TemplateParameterFile $azuredocumentDbParametersFilePath
-
-
 # logic app
 $logicAppName = $prefix + "lapp"
 $outArray.Add("v_logicAppName = $logicAppName")
@@ -881,3 +861,5 @@ catch {
 
 
 Write-Host Deployment complete. -ForegroundColor Green `n
+
+
