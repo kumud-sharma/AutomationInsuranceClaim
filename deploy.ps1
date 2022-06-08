@@ -9,11 +9,11 @@ $passwd = ConvertTo-SecureString $AzurePassword -AsPlainText -Force
 $cred = new-object -typename System.Management.Automation.PSCredential -argumentlist $AzureUserName, $passwd
 $subscriptionId = $AzureSubscriptionID 
 Connect-AzAccount -Credential $cred | Out-Null
-$resourceGroupName= "Insurance"
+$resourceGroupName= (Get-AzResourceGroup | Where-Object { $_.ResourceGroupName -like "fsihack*" }).ResourceGroupName
 $loc= Get-AzResourceGroup -Name $resourceGroupName
 $location= $loc.location
 #Write-Host $location
-$uniqueName= "claim"+$DeploymentID
+$uniqueName= "fsihack"+$DeploymentID
 CD C:\Users\Public\Desktop\deploy
 #----------------------------------------------------------------#
 #   Parameters                                                   #
@@ -88,14 +88,14 @@ $outArray.Add("v_prefix=$prefix")
 $outArray.Add("v_resourceGroupName=$resourceGroupName")
 $outArray.Add("v_location=$location")
 
-
+Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+Set-PSRepository -Name "PSGallery" -Installationpolicy Trusted
 Install-Module Az.Search -Force
 Install-Module -Name Az.BotService -Force
 Install-Module AzureAD -Force
 Import-Module AzureAD
+Import-Module Az.Search
 Install-Module -Name MSOnline
-Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-Set-PSRepository -Name "PSGallery" -Installationpolicy Trusted
 Update-Module -Name Az.Search
 
 $ErrorActionPreference = "Stop"
@@ -223,7 +223,7 @@ foreach ($containerName in $storageContainerNames) {
     catch {
     }
 }
-
+Start-Sleep -s 10
 # Get Account Key and connection string
 $storageAccountKey = (Get-AzStorageAccountKey -ResourceGroupName $resourceGroupName -AccountName $storageAccountName).Value[0]
 $storageAccountConnectionString = 'DefaultEndpointsProtocol=https;AccountName=' + $storageAccountName + ';AccountKey=' + $storageAccountKey + ';EndpointSuffix=core.windows.net' 
@@ -249,14 +249,14 @@ New-AzCognitiveServicesAccount `
 		-Type FormRecognizer `
 		-SkuName S0 `
 		-Location $location
-
+Start-Sleep -s 10
 # Get Key and Endpoint
 $formRecognizerEndpoint =  (Get-AzCognitiveServicesAccount -ResourceGroupName $resourceGroupName -Name $formRecognizerName).Endpoint		
 $formRecognizerSubscriptionKey =  (Get-AzCognitiveServicesAccountKey -ResourceGroupName $resourceGroupName -Name $formRecognizerName).Key1		
 $outArray.Add("v_formRecognizerEndpoint=$formRecognizerEndpoint")
 $outArray.Add("v_formRecognizerSubscriptionKey=$formRecognizerSubscriptionKey")
 
-
+Start-Sleep -s 10
 # Create Cognitive Services ( All in one )
 
 $luisAuthoringName = $prefix + "lacs"
@@ -269,7 +269,7 @@ New-AzCognitiveServicesAccount `
 		-Type LUIS.Authoring `
 		-SkuName F0 `
 		-Location 'westus'
-
+Start-Sleep -s 10
 # Get Key and Endpoint
 $luisAuthoringEndpoint =  (Get-AzCognitiveServicesAccount -ResourceGroupName $resourceGroupName -Name $luisAuthoringName).Endpoint		
 $luisAuthoringSubscriptionKey =  (Get-AzCognitiveServicesAccountKey -ResourceGroupName $resourceGroupName -Name $luisAuthoringName).Key1		
@@ -286,14 +286,14 @@ New-AzCognitiveServicesAccount `
 		-Type LUIS `
 		-SkuName F0 `
 		-Location 'westus'
-
+Start-Sleep -s 10
 # Get Key and Endpoint
 $luisPredictionEndpoint =  (Get-AzCognitiveServicesAccount -ResourceGroupName $resourceGroupName -Name $luisPredictionName).Endpoint		
 $luisPredictionSubscriptionKey =  (Get-AzCognitiveServicesAccountKey -ResourceGroupName $resourceGroupName -Name $luisPredictionName).Key1		
 $outArray.Add("v_luisAuthoringEndpoint=$luisPredictionEndpoint")
 $outArray.Add("v_luisAuthoringSubscriptionKey=$luisPredictionSubscriptionKey")
 
-
+Start-Sleep -s 10
 # Create Custom Vision Training Cognitive service
 #$customVisionTrain = $prefix + $id + "cvtrain"
 $customVisionTrain = $prefix + "cvtraincs"
@@ -308,13 +308,13 @@ New-AzCognitiveServicesAccount `
 		-Type CustomVision.Training `
 		-SkuName S0 `
 		-Location $location
-
+Start-Sleep -s 10
 # Get Key and Endpoint
 $customVisionTrainEndpoint =  (Get-AzCognitiveServicesAccount -ResourceGroupName $resourceGroupName -Name $customVisionTrain).Endpoint		
 $customVisionTrainSubscriptionKey =  (Get-AzCognitiveServicesAccountKey -ResourceGroupName $resourceGroupName -Name $customVisionTrain).Key1		
 $outArray.Add("v_customVisionTrainEndpoint=$customVisionTrainEndpoint")
 $outArray.Add("v_customVisionTrainSubscriptionKey=$customVisionTrainSubscriptionKey")
-
+Start-Sleep -s 10
 # Create Custom Vision Prediction Cognitive service
 $customVisionPredict = $prefix + "cvpredictcs"
 $outArray.Add("v_customVisionPredict=$customVisionPredict")
@@ -329,7 +329,7 @@ New-AzCognitiveServicesAccount `
 		-SkuName S0 `
 		-Location $location
 
-
+Start-Sleep -s 10
 # Get Key and Endpoint
 $customVisionPredictEndpoint =  (Get-AzCognitiveServicesAccount -ResourceGroupName $resourceGroupName -Name $customVisionPredict).Endpoint		
 $customVisionPredictSubscriptionKey =  (Get-AzCognitiveServicesAccountKey -ResourceGroupName $resourceGroupName -Name $customVisionPredict).Key1		
@@ -355,6 +355,7 @@ if ($currentApsName.Name -eq $null ) {
         -ResourceGroupName $resourceGroupName `
         -Tier Basic
 }
+Start-Sleep -s 10
 #   Step 5 - Azure Search Service								 #
 #----------------------------------------------------------------#
 # Create Cognitive Search Service
@@ -370,13 +371,13 @@ if ($null -eq $currentAzSearchName.Name) {
 			-Sku "Basic" `
 			-Location $location
 }
-
+Start-Sleep -s 10
 
 $cognitiveSearchKey = (Get-AzSearchAdminKeyPair -ResourceGroupName $resourceGroupName -ServiceName $cognitiveSearchName).Primary
 $cognitiveSearchEndPoint = 'https://' + $cognitiveSearchName + '.search.windows.net'
 $outArray.Add("v_cognitiveSearchKey=$cognitiveSearchKey")
 $outArray.Add("v_cognitiveSearchEndPoint=$cognitiveSearchEndPoint")
-
+Start-Sleep -s 10
 #   Step 6 - CosmosDb account, database and container			 #
 #----------------------------------------------------------------#
 
@@ -436,6 +437,7 @@ if ($null -eq $currentCosmosDb.Name) {
         -PropertyObject ($cosmosDatabaseProperties) `
         -Force
 }
+Start-Sleep -s 10
 # Create Cosmos Containers
 Write-Host Creating CosmosDB Containers... -ForegroundColor Green
 $cosmosContainerNames = @($cosmosClaimsContainer)
@@ -459,6 +461,7 @@ foreach ($containerName in $cosmosContainerNames) {
 				-PropertyObject $cosmosContainerProperties `
 				-Force 
 }
+Start-Sleep -s 10
 $cosmosEndPoint = (Get-AzResource -ResourceType "Microsoft.DocumentDb/databaseAccounts" `
      -ApiVersion "2015-04-08" -ResourceGroupName $resourceGroupName `
      -Name $cosmosAccountName | Select-Object Properties).Properties.documentEndPoint
@@ -471,7 +474,7 @@ $cosmosConnectionString = (Invoke-AzResourceAction -Action listConnectionStrings
 $outArray.Add("v_cosmosEndPoint=$cosmosEndPoint")
 $outArray.Add("v_cosmosPrimaryKey=$cosmosPrimaryKey")
 $outArray.Add("v_cosmosConnectionString=$cosmosConnectionString")
-#------#
+Start-Sleep -s 10
 #----------------------------------------------------------------#
 #   Step 7 - Find all forms that needs training and upload		 #
 #----------------------------------------------------------------#
@@ -563,6 +566,7 @@ foreach ($folder in $folders) {
 		
 	}
 }
+Start-Sleep -s 10
 #----------------------------------------------------------------#
 #   Step 8 - Train LUIS Models						 			 #
 #----------------------------------------------------------------#
@@ -630,10 +634,11 @@ foreach($file in $files){
 	{
 	}
 }
-
+Start-Sleep -s 10
 
 CD C:\Users\Public\Desktop\deploy
 
+#----------------------------------------------------------------#
 #   Step 9 - Create API Connection and Deploy Logic app		 #
 #----------------------------------------------------------------#
 $azureBlobApiConnectionName = "azureblob"
@@ -720,6 +725,8 @@ New-AzResourceGroupDeployment `
 		-Name $azuredocumentDbApiConnectionName `
 		-TemplateFile $azuredocumentDbTemplateFilePath `
 		-TemplateParameterFile $azuredocumentDbParametersFilePath
+Start-Sleep -s 10
+
 # logic app
 $logicAppName = $prefix + "lapp"
 $outArray.Add("v_logicAppName = $logicAppName")
@@ -828,13 +835,13 @@ $appDisplayName = $prefix + "appId"
 #tiiogcmu30xqmo0a4yp8r2cqdzs5r4vj051ys4ed
 # curl -k -X POST https://login.microsoftonline.com/botframework.com/oauth2/v2.0/token -d "grant_type=client_credentials&client_id=a16e0d41-1743-4d9f-9c12-ae34ee7d6281&client_secret=cvJ7Q~o-46FnJynOdqiTDWzaf8WchbO-nERb_&scope=https%3A%2F%2Fapi.botframework.com%2F.default"
 
-$newApp = az ad app create --display-name $appDisplayName --available-to-other-tenants $true
-$newAppJson = $newApp | ConvertFrom-Json
-$appId = $newAppJson.appId
-$startDate = Get-Date
-$endDate = $startDate.AddYears(1)
-$appPassword = az ad app credential reset --id $appId | ConvertFrom-Json
-$clientPassword = $appPassword.password
+#$newApp = az ad app create --display-name $appDisplayName --available-to-other-tenants $true
+#$newAppJson = $newApp | ConvertFrom-Json
+#$appId = $newAppJson.appId
+#$startDate = Get-Date
+#$endDate = $startDate.AddYears(1)
+#$appPassword = az ad app credential reset --id $appId | ConvertFrom-Json
+#$clientPassword = $appPassword.password
 $botName = $prefix + "bot"
 $endPointName = "https://" + $botWebApiName + "azurewebsites.net/api/messages" 
 
