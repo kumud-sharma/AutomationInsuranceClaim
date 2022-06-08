@@ -88,18 +88,8 @@ $outArray.Add("v_prefix=$prefix")
 $outArray.Add("v_resourceGroupName=$resourceGroupName")
 $outArray.Add("v_location=$location")
 
-Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-Set-PSRepository -Name "PSGallery" -Installationpolicy Trusted
-Install-Module Az.Search -Force
-Install-Module -Name Az.BotService -Force
-Install-Module AzureAD -Force
-Import-Module AzureAD
-Import-Module Az.Search
-Install-Module -Name MSOnline
-Update-Module -Name Az.Search
 
 $ErrorActionPreference = "Stop"
-#Install-Module AzTable -Force
 
 # Sign In
 Write-Host Logging in... -ForegroundColor Green
