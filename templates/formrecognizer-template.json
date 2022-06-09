@@ -18,10 +18,7 @@
 			"type": "string"
 		}
     },
-    "variables": {
-   
-    "formRecognizerName": "formRecognizerName"
-    },
+    "variables": {},
     "resources": [
         {
             "type": "Microsoft.Web/connections",
@@ -48,11 +45,11 @@
                     "id": "[concat('/subscriptions/', parameters('subscription_id'), '/providers/Microsoft.Web/locations/', parameters('location'), '/managedApis/', parameters('connections_formrecognizer_name'))]"
                 },
 		"parameterValues": {
-          "siteUrl": "[variables('formRecognizerName')]",
-          "api_key": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', variables('formRecognizerName')), '2021-04-30').key1]"
-
-        }
+                "siteUrl": "[parameters('predictive_url')]",
+                "api_key": "[parameters('formrecognizer_key')]"
+            }
             }
         }
     ]
 }
+
