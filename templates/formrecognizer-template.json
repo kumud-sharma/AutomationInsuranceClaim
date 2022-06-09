@@ -18,7 +18,10 @@
 			"type": "string"
 		}
     },
-    "variables": {},
+    "variables": {
+   
+    "formRecognizerName": "formRecognizerName"
+    },
     "resources": [
         {
             "type": "Microsoft.Web/connections",
@@ -27,6 +30,7 @@
             "location": "[parameters('location')]",
 			"kind": "V1",
             "properties": {
+		
                 "displayName": "fsihackformrec",
                 "customParameterValues": {
 					"predictionKey": "[parameters('formrecognizer_key')]",
@@ -42,7 +46,12 @@
                     "description": "Extracts information from forms and images into structured data based on pre-trained models or model created by a set of representative training forms.",
 					"type": "Microsoft.Web/locations/managedApis",
                     "id": "[concat('/subscriptions/', parameters('subscription_id'), '/providers/Microsoft.Web/locations/', parameters('location'), '/managedApis/', parameters('connections_formrecognizer_name'))]"
-                }
+                },
+		"parameterValues": {
+          "siteUrl": "[variables('formRecognizerName')]",
+          "api_key": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', variables('formRecognizerName')), '2021-04-30').key1]"
+
+        }
             }
         }
     ]
