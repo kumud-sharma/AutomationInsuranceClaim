@@ -40,7 +40,11 @@
                     "description": "Azure Custom Vision Service is a Microsoft Cognitive Services product for tagging images using your custom computer vision model.",
 					"type": "Microsoft.Web/locations/managedApis",
                     "id": "[concat('/subscriptions/', parameters('subscription_id'), '/providers/Microsoft.Web/locations/', parameters('location'), '/managedApis/', parameters('connections_customvision_name'))]"
-                }
+                },
+		"parameterValues": {
+               "siteUrl": "[parameters('predictive_url')]",
+               "api_key": "[parameters('customvision_key')]"
+        }
             }
         }
     ]
