@@ -14,7 +14,7 @@ $loc= Get-AzResourceGroup -Name $resourceGroupName
 $location= $loc.location
 #Write-Host $location
 $uniqueName= "fsihack"+$DeploymentID
-CD C:\Users\Public\Desktop\deploy
+CD C:\Users\Public\Desktop\AutomationInsuranceClaim
 #----------------------------------------------------------------#
 #   Parameters                                                   #
 #----------------------------------------------------------------#
@@ -78,7 +78,7 @@ $uniqueName = $uniqueName.ToLower();
 
 # prefixes
 $prefix = $uniqueName
-$ScriptRoot = "C:\Users\Public\Desktop\deploy"
+$ScriptRoot = "C:\Users\Public\Desktop\AutomationInsuranceClaim"
 $outArray = New-Object System.Collections.ArrayList($null)
 
 if ($ScriptRoot -eq "" -or $null -eq $ScriptRoot ) {
@@ -626,7 +626,7 @@ foreach($file in $files){
 }
 Start-Sleep -s 10
 
-CD C:\Users\Public\Desktop\deploy
+CD C:\Users\Public\Desktop\AutomationInsuranceClaim
 
 #----------------------------------------------------------------#
 #   Step 9 - Create API Connection and Deploy Logic app		 #
