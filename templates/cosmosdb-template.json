@@ -18,7 +18,7 @@
             "type": "string"
         }
     },
-    "variables": {},
+    
     "resources": [
         {
             "type": "Microsoft.Web/connections",
@@ -41,7 +41,14 @@
                     "description": "Azure Cosmos DB is a globally distributed multi-model database service designed to enable you to elastically and independently scale throughput and storage across any number of geographical regions with a comprehensive SLA.",
 					"type": "Microsoft.Web/locations/managedApis",
                     "id": "[concat('/subscriptions/', parameters('subscription_id'), '/providers/Microsoft.Web/locations/', parameters('location'), '/managedApis/', parameters('connections_cosmosdb_name'))]"
-                }
+                },
+		"parameterValues": {
+
+
+          "databaseAccount": "[parameters('cosmosdb_account_name')]",
+          "accessKey": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosdb_account_name')), '2015-04-08').primaryMasterKey]"
+
+        }
             }
         }
     ]
