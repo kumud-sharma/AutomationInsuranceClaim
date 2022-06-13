@@ -818,24 +818,18 @@ try {
 	}
 catch {
 	}
-
+Connect-AzureAD -Credential $cred | Out-Null
 $appDisplayName = $prefix + "appId"
-#a16e0d41-1743-4d9f-9c12-ae34ee7d6281
-#cvJ7Q~o-46FnJynOdqiTDWzaf8WchbO-nERb_
-#tiiogcmu30xqmo0a4yp8r2cqdzs5r4vj051ys4ed
-# curl -k -X POST https://login.microsoftonline.com/botframework.com/oauth2/v2.0/token -d "grant_type=client_credentials&client_id=a16e0d41-1743-4d9f-9c12-ae34ee7d6281&client_secret=cvJ7Q~o-46FnJynOdqiTDWzaf8WchbO-nERb_&scope=https%3A%2F%2Fapi.botframework.com%2F.default"
-$orgs = "AzureADMultipleOrgs"
-#$newApp = az ad app create --display-name $appDisplayName --available-to-other-tenants $true
-$newApp = az ad app create --display-name $appDisplayName --sign-in-audience $orgs
-$newAppJson = $newApp | ConvertFrom-Json
-$appId = $newAppJson.appId
+#$orgs = "AzureADMultipleOrgs"
+aadApplication = New-AzureADApplication -DisplayName $appDisplayName
+$appObjectId=$aadApplication.ObjectId
+$appId=$aadApplication.AppId
 $startDate = Get-Date
 $endDate = $startDate.AddYears(1)
-$appPassword = az ad app credential reset --id $appId | ConvertFrom-Json
+$appPassword = New-AzureADApplicationPasswordCredential -ObjectId $appObjectId -CustomKeyIdentifier "AppAccessKey"
 $clientPassword = $appPassword.password
 $botName = $prefix + "bot"
 $endPointName = "https://" + $botWebApiName + "azurewebsites.net/api/messages" 
-
 $botTemplateFilePath = "$ScriptRoot\templates\azurebot-template.json"
 $botParametersFilePath = "$ScriptRoot\templates\azurebot-parameters.json"
 $botParametersTemplate = Get-Content $botParametersFilePath | ConvertFrom-Json
@@ -855,7 +849,6 @@ try {
 }
 catch {
 }
-
 #New-AzBotService -ResourceGroupName  $resourceGroupName -Name $botName -ApplicationId $appId -Location $location -Sku S1 -Description "Fsi Hack Bot" -Endpoint $endPointName -Registration
 
 
