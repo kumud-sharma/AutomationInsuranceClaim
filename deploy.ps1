@@ -818,6 +818,7 @@ try {
 	}
 catch {
 	}
+Start-Sleep -s 10
 Connect-AzureAD -Credential $cred | Out-Null
 $appDisplayName = $prefix + "appId"
 #$orgs = "AzureADMultipleOrgs"
