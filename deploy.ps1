@@ -822,7 +822,7 @@ Start-Sleep -s 10
 Connect-AzureAD -Credential $cred | Out-Null
 $appDisplayName = $prefix + "appId"
 #$orgs = "AzureADMultipleOrgs"
-aadApplication = New-AzureADApplication -DisplayName $appDisplayName
+$aadApplication = New-AzureADApplication -DisplayName $appDisplayName
 $appObjectId=$aadApplication.ObjectId
 $appId=$aadApplication.AppId
 $startDate = Get-Date
