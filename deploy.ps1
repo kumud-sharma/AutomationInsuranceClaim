@@ -238,8 +238,8 @@ New-AzCognitiveServicesAccount `
 		-Name $formRecognizerName `
 		-Type FormRecognizer `
 		-SkuName S0 `
-		-Location $location `
-		-CustomSubdomainName $formRecognizerName
+		-Location $location 
+		
 Start-Sleep -s 10
 # Get Key and Endpoint
 $formRecognizerEndpoint =  (Get-AzCognitiveServicesAccount -ResourceGroupName $resourceGroupName -Name $formRecognizerName).Endpoint		
