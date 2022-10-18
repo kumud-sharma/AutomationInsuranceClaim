@@ -8,11 +8,10 @@ $AzureSubscriptionID = "$($creds.AzureSubscriptionID)"
 $passwd = ConvertTo-SecureString $AzurePassword -AsPlainText -Force
 $cred = new-object -typename System.Management.Automation.PSCredential -argumentlist $AzureUserName, $passwd
 $subscriptionId = $AzureSubscriptionID 
-Connect-AzAccount -Credential $cred | Out-Null
+Connect-AzAccount -Credential $cred | Out-Null 
 $resourceGroupName= (Get-AzResourceGroup | Where-Object { $_.ResourceGroupName -like "fsihack*" }).ResourceGroupName
 $loc= Get-AzResourceGroup -Name $resourceGroupName
 $location= $loc.location
-#Write-Host $location
 $uniqueName= "fsihack"+$DeploymentID
 CD C:\Users\Public\Desktop\AutomationInsuranceClaim
 #----------------------------------------------------------------#
