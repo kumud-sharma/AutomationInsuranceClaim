@@ -1,4 +1,4 @@
-CD C:\LabFiles
+CD C:\Packages
 $credsfilepath = ".\AzureCreds.txt"
 $creds = Get-Content $credsfilepath | Out-String | ConvertFrom-StringData
 $AzureUserName = "$($creds.AzureUserName)"
